@@ -1,26 +1,60 @@
 ﻿using System;
-using System.Runtime.ConstrainedExecution;
+using System.Net.NetworkInformation;
+using System.Reflection.PortableExecutable;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Linq;
 
 namespace wordCounting
 {
-    static class fileParser
+
+    class FileInfo
     {
-        public static void fileParse(string fileName)
+        public FileInfo() { wordCount = 0; }
+
+        private int wordCount;
+        public void PrintWordCount() { Console.WriteLine(wordCount); }
+        public void incrementWordCount() { wordCount++; }
+        
+    }
+
+    class FileParser
+    {
+        public FileParser(FileInfo fi) { fWordCount = fi;  }
+        public FileInfo fWordCount;
+        public void ParseFile(string fileName)
         {
-            char ch = '\0';
+            char ch;
             string word = "";
+            char[] whiteChars = { ' ', '\n', '\t' , '\r'};
+            int charInt = 0;
 
             StreamReader reader = new StreamReader(fileName);
-            do
-            {
-                ch = (char)reader.Read();
-                Console.Write(ch);
+            charInt = reader.Read();
 
-            } while (!reader.EndOfStream);
+            while (charInt != -1)
+            {
+                ch = (char)charInt;
+                if (!(whiteChars.Contains(ch)))
+                {
+                    word += ch;   
+                }
+                else if ((whiteChars.Contains(ch)) && (word.Length > 0))
+                {
+                    fWordCount.incrementWordCount();
+                    word = "";                
+                }                
+                charInt = reader.Read();
+            }
+            if (word.Length > 0) { fWordCount.incrementWordCount(); }
+            
             reader.Close();
             reader.Dispose();
         }
     }
+
+   
 
     internal class Program
     {
@@ -29,20 +63,21 @@ namespace wordCounting
             if (args.Length != 1) {
                 Console.WriteLine("Argument Error");
                 return;
-            } else
-            {
-
-                try
-                {
-                    fileParser.fileParse(args[0]);
-                }
-                catch //(Exception ex)
-                {
-                    Console.WriteLine("File Error");
-                }
             }
-            for (int i = 0; i < args.Length; i++) { Console.WriteLine(args[i]); }
-            Console.WriteLine("Hello, World!");
+            
+            try
+            {
+                string f = args[0]; 
+                FileInfo fi = new FileInfo();
+                FileParser fp = new FileParser(fi);
+                fp.ParseFile(f);
+                fi.PrintWordCount();
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("File Error");
+            }
+            
         }
     }
 }
