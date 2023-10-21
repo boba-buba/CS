@@ -2,7 +2,7 @@
   "profiles": {
     "ParagraphWordCounter": {
       "commandName": "Project",
-      "commandLineArgs": ".\\Hamlet.txt"
+      "commandLineArgs": "C:\\Users\\ncoro\\Source\\Repos\\CS\\ParagraphWordCounter\\Hamleto.txt"
     }
   }
 }

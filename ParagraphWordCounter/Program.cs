@@ -14,21 +14,49 @@ namespace ParagraphWordCounter
     {
         public FileInfo() { }
 
-        int ParagraphWordCounter = 0;
+        int ParagraphWordCount = 0;
+        int LineWordCount = 0;
+        int ParagraphCount = 0;
+
+        List<int> ParagraphsCouner = new List<int>();
 
         public void ResetCount()
         {
-            ParagraphWordCounter = 0;
+            LineWordCount = 0;
         }
 
         public void IncrementCount()
         {
-            ParagraphWordCounter++;
+            LineWordCount++;
         }
 
         public void PrintCount()
         {
-            Console.WriteLine(ParagraphWordCounter.ToString());
+            if (LineWordCount != 0)
+            {
+                ParagraphWordCount += LineWordCount;
+                LineWordCount = 0;
+            }
+            else
+            {
+                if ( ParagraphWordCount != 0)
+                {
+                    //if (ParagraphCount != 0) Console.Write('\n');
+                    //Console.Write(ParagraphWordCount.ToString());
+                    ParagraphsCouner.Add(ParagraphWordCount);
+                    ParagraphWordCount = 0;
+                    ParagraphCount++;
+                }
+            }
+        }
+
+        public void PrintParagraphs()
+        {
+            for (int i = 0; i < ParagraphCount; i++)
+            {
+                if (i != 0) Console.Write('\n');
+                Console.Write(ParagraphsCouner[i]);
+            }
         }
     }
     class FileParser
@@ -39,7 +67,7 @@ namespace ParagraphWordCounter
         {
             char ch;
             string word = "";
-            char[] whiteChars = { ' ', '\t', '\r' };
+            char[] whiteChars = { ' ', '\t', '\r', '\n' };
             int charInt = 0;
 
             StreamReader reader = new StreamReader(fileName);
@@ -66,7 +94,7 @@ namespace ParagraphWordCounter
             }
             if (word.Length > 0) { info.IncrementCount(); info.PrintCount(); }
 
-
+            info.PrintCount();
             reader.Close();
             reader.Dispose();
         }
@@ -85,11 +113,11 @@ namespace ParagraphWordCounter
 
             try
             {
-                //string f = args[0];
-                string f = "C:\\Users\\ncoro\\Source\\Repos\\CS\\ParagraphWordCounter\\Hamleto.txt";
+                string f = args[0];
                 FileInfo fi = new FileInfo();
                 FileParser fp = new FileParser(fi);
                 fp.ParseFile(f);
+                fi.PrintParagraphs();
             }
             catch (IOException)
             {
