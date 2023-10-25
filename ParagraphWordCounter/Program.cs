@@ -14,16 +14,9 @@ namespace ParagraphWordCounter
     {
         public FileInfo() { }
 
-        int ParagraphWordCount = 0;
         int LineWordCount = 0;
-        int ParagraphCount = 0;
-
-        List<int> ParagraphsCouner = new List<int>();
-
-        public void ResetCount()
-        {
-            LineWordCount = 0;
-        }
+        int paragraphCount = 0;
+        int paragraphWords = 0;
 
         public void IncrementCount()
         {
@@ -32,30 +25,19 @@ namespace ParagraphWordCounter
 
         public void PrintCount()
         {
-            if (LineWordCount != 0)
+
+            if (LineWordCount == 0 && paragraphWords != 0)
             {
-                ParagraphWordCount += LineWordCount;
+                if (paragraphCount > 0) Console.Write('\n');
+                Console.Write(paragraphWords);
+                paragraphCount++;
+                paragraphWords = 0;
                 LineWordCount = 0;
             }
             else
             {
-                if ( ParagraphWordCount != 0)
-                {
-                    //if (ParagraphCount != 0) Console.Write('\n');
-                    //Console.Write(ParagraphWordCount.ToString());
-                    ParagraphsCouner.Add(ParagraphWordCount);
-                    ParagraphWordCount = 0;
-                    ParagraphCount++;
-                }
-            }
-        }
-
-        public void PrintParagraphs()
-        {
-            for (int i = 0; i < ParagraphCount; i++)
-            {
-                if (i != 0) Console.Write('\n');
-                Console.Write(ParagraphsCouner[i]);
+                paragraphWords += LineWordCount;
+                LineWordCount = 0;
             }
         }
     }
@@ -67,7 +49,7 @@ namespace ParagraphWordCounter
         {
             char ch;
             string word = "";
-            char[] whiteChars = { ' ', '\t', '\r', '\n' };
+            char[] whiteChars = { ' ', '\t', '\n' };
             int charInt = 0;
 
             StreamReader reader = new StreamReader(fileName);
@@ -76,12 +58,8 @@ namespace ParagraphWordCounter
             while (charInt != -1)
             {
                 ch = (char)charInt;
-                if ((ch == '\n') && word.Length == 0)
-                {
-                    info.PrintCount();
-                    info.ResetCount();
-                }
-                else if (!(whiteChars.Contains(ch)))
+                
+                if (!(whiteChars.Contains(ch)))
                 {
                     word += ch;
                 }
@@ -89,6 +67,10 @@ namespace ParagraphWordCounter
                 {
                     info.IncrementCount();
                     word = "";
+                }
+                if ((ch == '\n'))
+                {
+                    info.PrintCount();
                 }
                 charInt = reader.Read();
             }
@@ -117,7 +99,6 @@ namespace ParagraphWordCounter
                 FileInfo fi = new FileInfo();
                 FileParser fp = new FileParser(fi);
                 fp.ParseFile(f);
-                fi.PrintParagraphs();
             }
             catch (IOException)
             {
@@ -126,3 +107,4 @@ namespace ParagraphWordCounter
         }
     }
 }
+

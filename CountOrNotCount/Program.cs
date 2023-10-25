@@ -8,226 +8,203 @@ using System.Linq;
 using System.Collections;
 using System.Reflection.Metadata;
 using System.Runtime.ConstrainedExecution;
+using System.Xml.Linq;
 
 namespace CountOrNotCount
-{
-    public class ProgramInputOutputState : IDisposable
+{ 
+    internal class Program
     {
-        public const string ArgumentErrorMessage = "Argument Error";
-        public const string FileErrorMessage = "File Error";
+        static void Main(string[] args)
 
-        public TextReader? Reader { get; private set; }
-        public TextWriter? Writer { get; private set; }
-
-        public bool InitializeFromCommandLineArgs(string[] args)
         {
+            const string ArgumentError = "Argument Error";
+            const string FileError = "File Error";
             if (args.Length < 3)
             {
-                Console.WriteLine(ArgumentErrorMessage);
-                return false;
+                Console.WriteLine(ArgumentError);
+                return;
             }
 
             try
             {
-                Reader = new StreamReader(args[0]);
+                string inputFile = args[0];
+                string outFile = args[1];
+                string columnName = args[2];
+
+                FileInfo fInfo = new FileInfo(columnName);
+                FileInputOutput fIO = new FileInputOutput(inputFile, outFile, fInfo);
+
+                fIO.ParseFile();
+                fIO.WriteReport();
+                fIO.Dispose();
             }
             catch (IOException)
             {
-                Console.WriteLine(FileErrorMessage);
+                Console.WriteLine(FileError);
             }
             catch (UnauthorizedAccessException)
+
             {
-                Console.WriteLine(FileErrorMessage);
+                Console.WriteLine(FileError);
             }
             catch (ArgumentException)
             {
-                Console.WriteLine(FileErrorMessage);
+                Console.WriteLine(FileError);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+    }
+
+    public class FileInfo
+    {
+        public const string ColumnError = "Non-existent Column Name";
+        int _columnNumber = -1;
+        public string columnName { get; private set; }
+        public long ItemsSum { get; private set; }
+        public FileInfo(string colName)
+        {
+            columnName = colName;
+            ItemsSum = 0;
+        }
+
+        void AddToSum(int item)
+        {
+            ItemsSum += item;
+        }
+
+        public void ParseHeader(string[] line)
+        {
+            for (int i = 0; i < line.Length; i++)
+            {
+                if (line[i] == columnName && _columnNumber == -1)
+                {
+                    _columnNumber  = i;
+                }
+            }
+            if (_columnNumber == -1)
+            {
+                throw new Exception("Non-existent Column Name");
+            }
+        }
+
+        public void ParseLine(string[] line)
+        {
+            int num = 0;
+            for (int i = 0; i < line.Length; i++)
+            {
+                if (_columnNumber == i)
+                {
+                    try
+                    {
+                        num = Convert.ToInt32(line[i]);
+                        AddToSum(num);
+                    }
+                    catch (Exception)
+                    {
+                        throw new Exception("Invalid Integer Value");
+                    }
+                }
+            }
+        }
+    }
+
+
+    class FileInputOutput
+    {
+        StreamReader _fr;
+        StreamWriter _fw;
+        FileInfo info;
+
+        public FileInputOutput(string inputFile, string outputFile, FileInfo fi)
+        {
+            _fr = new StreamReader(inputFile);
+            _fw = new StreamWriter(outputFile);
+            info = fi;
+        }
+
+        public void ParseFile()
+        {
+            int columns = 0;
+            string file_line = _fr.ReadLine();
+            if (file_line == null)
+            {
+                Dispose();
+                throw new Exception("Invalid File Format");
             }
 
+           
+            char[] whitechars = new char[] { ' ', '\t' };
+
+            string[] line = file_line.Split(whitechars, StringSplitOptions.RemoveEmptyEntries);
+
+            if (line.Count() == 0)
+            {
+                Dispose();
+                throw new Exception("Invalid File Format");
+            }
             try
             {
-                Writer = new StreamWriter(args[1]);
-            }
-            catch (IOException)
-            {
-                Console.WriteLine(FileErrorMessage);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                Console.WriteLine(FileErrorMessage);
-            }
-            catch (ArgumentException)
-            {
-                Console.WriteLine(FileErrorMessage);
-            }
+                info.ParseHeader(line);
 
-            return true;
+                columns = line.Count();
+                while ((file_line = _fr.ReadLine()) != null)
+                {
+
+                    line = file_line.Split(whitechars, StringSplitOptions.RemoveEmptyEntries);
+                    if (line.Count() != columns)
+                    {
+                        throw new Exception("Invalid File Format");
+                    }
+                    info.ParseLine(line);
+                }
+            }
+            catch (Exception e)
+            {
+                Dispose();
+                throw new Exception(e.Message);
+            }
         }
 
         public void Dispose()
         {
-            Reader?.Dispose();
-            Writer?.Dispose();
-        }
-    }
-
-    class FileWriter
-    {
-        
-        TextWriter _writer;
-
-        public FileWriter(TextWriter tw) 
-        {   
-            _writer = tw; 
+            _fr?.Dispose();
+            _fw?.Dispose();
         }
 
-        public void WriteInfo(string info)
+        void WriteChar(char ch)
         {
-            for (int i = 0; i < info.Length; i++)
+            _fw?.Write(ch);
+        }
+
+        void WriteString(string text)
+        {
+            for (int i = 0; i < text.Length; i++)
             {
-                WriteChar(info[i]);
+                WriteChar(text[i]);
             }
         }
 
-        public void WriteChar(char ch)
+        public void WriteReport()
         {
-            _writer.Write(ch);
-        }
-        public void CloseWriter()
-        {
-            _writer.Close();
-            _writer.Dispose();
-        }
-    }
-    class FileInfo
-    {
-        string _columnName = "";
-        List<int> columnNumbers = new List<int>();
-        public bool nonExistentColumn { get; private set; }
-        
+            WriteString(info.columnName + '\n');
 
-        Int64 _countItem = 0;
-        public FileInfo(string column) { _columnName = column; nonExistentColumn = false; }
-
-        void AddToCount(Int64 quantity)
-        {
-            _countItem += quantity;
-        }
-
-        public void PrintCount(FileWriter fw)
-        {
-            if (nonExistentColumn) { return; }
-            fw.WriteInfo(_columnName + '\n');
-
-            for (int i = 0; i < _columnName.Length; i++) { fw.WriteChar('-'); }
-            fw.WriteChar('\n');
-            fw.WriteInfo(_countItem.ToString());
-        }
-   
-        public void ParseWord(int lineNumber, int columnNumber, string word)
-        {
-            Int64 num = 0;
-            if (lineNumber == 0 && word == _columnName) 
-            { columnNumbers.Add(columnNumber); }
-            else if (columnNumbers.Count() == 0 && lineNumber > 0) 
-            { nonExistentColumn = true; }
-            else if (lineNumber != 0 && columnNumbers.Contains(columnNumber))
+            for (int i = 0; i < info.columnName.Length; i++)
             {
-                try
-                {
-                    num = Convert.ToInt64(word);
-                    AddToCount(num);
-                }
-                catch (FormatException)
-                {
-                    Console.WriteLine("Invalid Integer Value");
-                }
+                WriteChar('-');
             }
-        }
-    }
-    class FileParser
-    {
-        TextReader _reader;
-        public bool invalidFormat { get; private set; } 
-        public FileParser(TextReader tr, FileInfo fi) { info = fi; _reader = tr; invalidFormat = false; }
-        FileInfo info;
-        public void ParseFile()
-        {
-            
-            char ch;
-            string word = "";
-            char[] whiteChars = { ' ', '\n', '\t', '\r' };
-            int charInt = 0;
-            int lineNumber = 0;
-            int columnNumber = 0;
-            int columns = 0;
-
-            charInt = _reader.Read();
-
-            while (charInt != -1)
+            WriteChar('\n');
+            if (info.ItemsSum > 1000000000000)
             {
-                ch = (char)charInt;
-                if ((ch == '\n'))
-                {
-                    if (lineNumber == 0) { columns  = columnNumber; }
-                    else
-                    {
-                        if ((columnNumber != columns) )
-                        {
-                            invalidFormat = true;
-                            Console.WriteLine("Invalid File Format");
-                            return;
-                        }
-                    }
-                    lineNumber++;
-                    columnNumber = 0;
-                }
-                else if (!(whiteChars.Contains(ch)))
-                {
-                    word += ch;
-                }
-                else if ((whiteChars.Contains(ch)) && (word.Length > 0))
-                {
-                    if (info.nonExistentColumn) 
-                    {
-                        Console.WriteLine("Non-existent Column Name");
-                        return; 
-                    }
-                    info.ParseWord(lineNumber, columnNumber, word);
-                    columnNumber++;
-                    word = "";
-                    
-                }
-                charInt = _reader.Read();
+                WriteString(1000000000000.ToString());
             }
-            if (word.Length > 0) { info.ParseWord(lineNumber, columnNumber, word);  }
-
-        }
-    }
-
-
-
-    internal class Program
-    {
-        static void Main(string[] args)
-        {
-            var state = new ProgramInputOutputState();
-            if (!state.InitializeFromCommandLineArgs(args))
-            {
-                return;
-            }
-
-            string columnName = args[2];
-            FileInfo fi = new FileInfo(columnName);
-            FileParser fp = new FileParser(state.Reader!, fi);
-            fp.ParseFile();
-            if (fp.invalidFormat) { state.Dispose(); return; }
-
-            FileWriter fw = new FileWriter(state.Writer!);
-            fi.PrintCount(fw);
-            state.Dispose();
-            
-
+            else if (info.ItemsSum < -1000000000000)
+                WriteString(1000000000000.ToString());
+            else
+                WriteString(info.ItemsSum.ToString());
+            WriteChar('\n');
         }
     }
 }
