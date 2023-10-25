@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wordCounting", "wordCountin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WordFrequency", "..\WordFrequency\WordFrequency.csproj", "{24FEE1F4-63CB-41A3-9BA2-CC8A556C43EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParagraphWordCounter", "..\ParagraphWordCounter\ParagraphWordCounter.csproj", "{9209196B-D717-4737-8F40-9A4143A75A8A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParagraphWordCounter", "..\ParagraphWordCounter\ParagraphWordCounter.csproj", "{9209196B-D717-4737-8F40-9A4143A75A8A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CountOrNotCount", "..\CountOrNotCount\CountOrNotCount.csproj", "{912E7C5A-01AF-4815-9B6E-DDAD242FEC38}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CountOrNotCount", "..\CountOrNotCount\CountOrNotCount.csproj", "{912E7C5A-01AF-4815-9B6E-DDAD242FEC38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParargaphWordCounter_UnitTests", "..\ParargaphWordCounter_UnitTests\ParargaphWordCounter_UnitTests.csproj", "{71C84092-6276-4932-9FDD-03956C613EE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{912E7C5A-01AF-4815-9B6E-DDAD242FEC38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{912E7C5A-01AF-4815-9B6E-DDAD242FEC38}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{912E7C5A-01AF-4815-9B6E-DDAD242FEC38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71C84092-6276-4932-9FDD-03956C613EE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71C84092-6276-4932-9FDD-03956C613EE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71C84092-6276-4932-9FDD-03956C613EE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71C84092-6276-4932-9FDD-03956C613EE1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

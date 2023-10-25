@@ -10,26 +10,26 @@ using System.Reflection.Metadata;
 
 namespace ParagraphWordCounter
 {
-    class FileInfo
+    public class WordProcessor
     {
-        public FileInfo() { }
+        public WordProcessor() { }
 
         int LineWordCount = 0;
         int paragraphCount = 0;
         int paragraphWords = 0;
-
+        string WordCounts = "";
         public void IncrementCount()
         {
             LineWordCount++;
         }
 
-        public void PrintCount()
+        public void AddLineWordsCount()
         {
 
             if (LineWordCount == 0 && paragraphWords != 0)
             {
-                if (paragraphCount > 0) Console.Write('\n');
-                Console.Write(paragraphWords);
+                if (paragraphCount > 0) WordCounts += '\n';
+                WordCounts += paragraphWords;
                 paragraphCount++;
                 paragraphWords = 0;
                 LineWordCount = 0;
@@ -40,19 +40,28 @@ namespace ParagraphWordCounter
                 LineWordCount = 0;
             }
         }
+
+        public string GetWordCounts() { return WordCounts; }
     }
-    class FileParser
-    {
-        public FileParser(FileInfo fi) { info = fi; }
-        FileInfo info;
-        public void ParseFile(string fileName)
+
+    public class FileParser
+    {        
+        WordProcessor info;
+        StreamReader reader;
+        public FileParser(WordProcessor fi, string fileName) 
+        { 
+            info = fi;
+            reader = new StreamReader(fileName);
+
+        }
+        
+        public void ParseFile()
         {
             char ch;
             string word = "";
             char[] whiteChars = { ' ', '\t', '\n' };
             int charInt = 0;
 
-            StreamReader reader = new StreamReader(fileName);
             charInt = reader.Read();
 
             while (charInt != -1)
@@ -70,20 +79,24 @@ namespace ParagraphWordCounter
                 }
                 if ((ch == '\n'))
                 {
-                    info.PrintCount();
+                    info.AddLineWordsCount();
                 }
                 charInt = reader.Read();
             }
-            if (word.Length > 0) { info.IncrementCount(); info.PrintCount(); }
+            if (word.Length > 0) { info.IncrementCount(); info.AddLineWordsCount(); }
 
-            info.PrintCount();
-            reader.Close();
+            info.AddLineWordsCount();      
+        }
+
+        public void Dispose()
+        {
             reader.Dispose();
         }
+        
     }
 
 
-    internal class Program
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -96,9 +109,11 @@ namespace ParagraphWordCounter
             try
             {
                 string f = args[0];
-                FileInfo fi = new FileInfo();
-                FileParser fp = new FileParser(fi);
-                fp.ParseFile(f);
+                WordProcessor fi = new WordProcessor();
+                FileParser fp = new FileParser(fi, f);
+                fp.ParseFile();
+                Console.Write(fi.GetWordCounts());
+                fp.Dispose();
             }
             catch (IOException)
             {
