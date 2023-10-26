@@ -2,7 +2,7 @@
   "profiles": {
     "CountOrNotCount": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Users\\ncoro\\Source\\Repos\\CS\\CountOrNotCount\\ZeleninaShort.txt C:\\Users\\ncoro\\Source\\Repos\\CS\\CountOrNotCount\\out.txt cena"
+      "commandLineArgs": "ZeleninaShort.txt out.txt cena"
     }
   }
 }

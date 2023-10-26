@@ -1,4 +1,0 @@
-cena	zbozi		cen			prodejce	mnozstvi	cena	trzba		 
-	34	brambory	tuzemske	Bartak		10895		12	    130740
-1	brambory	vlastni		Celestyn		10		-19090			  89	 
--1	jablka		dovoz		Adamec		1321	    30		39630

@@ -14,7 +14,7 @@ namespace ParargaphWordCounter_UnitTests
 
 
             // Act   
-            using (var consoleOutput = new ConsoleOutput())
+            using (var consoleOutput = new ConsoleOutputManager())
             {
                 state.InitializeFromCommandLineArgs(MockCommandLine);
                 var fi = new WordProcessor();
@@ -37,7 +37,7 @@ namespace ParargaphWordCounter_UnitTests
             var currentConsoleOut = Console.Out;
 
             // Act  
-            using (var consoleOutput = new ConsoleOutput())
+            using (var consoleOutput = new ConsoleOutputManager())
             {
                 state.InitializeFromCommandLineArgs(MockCommandLine);
                 var fi = new WordProcessor();
@@ -61,7 +61,7 @@ namespace ParargaphWordCounter_UnitTests
 
 
             // Act  
-            using (var consoleOutput = new ConsoleOutput())
+            using (var consoleOutput = new ConsoleOutputManager())
             {
                 state.InitializeFromCommandLineArgs(MockCommandLine);
                 var fi = new WordProcessor();
@@ -85,7 +85,7 @@ namespace ParargaphWordCounter_UnitTests
 
 
             // Act  
-            using (var consoleOutput = new ConsoleOutput())
+            using (var consoleOutput = new ConsoleOutputManager())
             {
                 state.InitializeFromCommandLineArgs(MockCommandLine);
                 var fi = new WordProcessor();
@@ -109,7 +109,7 @@ namespace ParargaphWordCounter_UnitTests
 
 
             // Act
-            using (var consoleOutput = new ConsoleOutput())
+            using (var consoleOutput = new ConsoleOutputManager())
             {
                 state.InitializeFromCommandLineArgs(MockCommandLine);
                 var fi = new WordProcessor();
@@ -132,7 +132,7 @@ namespace ParargaphWordCounter_UnitTests
             var currentConsoleOut = Console.Out;
             
             // Act  
-            using (var consoleOutput = new ConsoleOutput())
+            using (var consoleOutput = new ConsoleOutputManager())
             {            
                 state.InitializeFromCommandLineArgs(MockCommandLine);
                  
@@ -150,7 +150,7 @@ namespace ParargaphWordCounter_UnitTests
             var currentConsoleOut = Console.Out;
 
             // Act  
-            using (var consoleOutput = new ConsoleOutput())
+            using (var consoleOutput = new ConsoleOutputManager())
             {
                 state.InitializeFromCommandLineArgs(MockCommandLine);
 
@@ -168,7 +168,7 @@ namespace ParargaphWordCounter_UnitTests
             var currentConsoleOut = Console.Out;
 
             // Act  
-            using (var consoleOutput = new ConsoleOutput())
+            using (var consoleOutput = new ConsoleOutputManager())
             {
                 state.InitializeFromCommandLineArgs(MockCommandLine);
 
@@ -178,8 +178,75 @@ namespace ParargaphWordCounter_UnitTests
         }
 
         [Fact]
-        public void Test9()
+        public void DiakritikaTest()
         {
+            // Arrange
+            string[] MockCommandLine = new string[1] { "CzechLang.txt" };
+            var state = new ProgramInputOutputState();
+            var currentConsoleOut = Console.Out;
+
+
+            // Act
+            using (var consoleOutput = new ConsoleOutputManager())
+            {
+                state.InitializeFromCommandLineArgs(MockCommandLine);
+                var fi = new WordProcessor();
+                FileParser fp = new FileParser(fi, state.Reader!);
+                fp.ParseFile();
+                fi.PrintReport();
+                state.Dispose();
+
+                // Assert
+                Assert.Equal("27\n13\n20", consoleOutput.GetOuput());
+            }
+
+        }
+
+        [Fact]
+        public void WhiteCharsOnTheEOL()
+        {
+            // Arrange
+            string[] MockCommandLine = new string[1] { "WhiteCharsOnTheEOL.txt" };
+            var state = new ProgramInputOutputState();
+            var currentConsoleOut = Console.Out;
+
+            // Act
+            using (var consoleOutput = new ConsoleOutputManager())
+            {
+                state.InitializeFromCommandLineArgs(MockCommandLine);
+                var fi = new WordProcessor();
+                FileParser fp = new FileParser(fi, state.Reader!);
+                fp.ParseFile();
+                fi.PrintReport();
+                state.Dispose();
+
+                // Assert
+                Assert.Equal("36\n33\n35\n32\n50", consoleOutput.GetOuput());
+            }
+
+        }
+
+        [Fact]
+        public void WhiteCharsOnTheEOF()
+        {
+            // Arrange
+            string[] MockCommandLine = new string[1] { "WhiteCharsOnTheEOF.txt" };
+            var state = new ProgramInputOutputState();
+            var currentConsoleOut = Console.Out;
+
+            // Act
+            using (var consoleOutput = new ConsoleOutputManager())
+            {
+                state.InitializeFromCommandLineArgs(MockCommandLine);
+                var fi = new WordProcessor();
+                FileParser fp = new FileParser(fi, state.Reader!);
+                fp.ParseFile();
+                fi.PrintReport();
+                state.Dispose();
+
+                // Assert
+                Assert.Equal("36\n33\n35\n32\n50", consoleOutput.GetOuput());
+            }
 
         }
     }

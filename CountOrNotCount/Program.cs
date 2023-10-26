@@ -11,36 +11,102 @@ using System.Runtime.ConstrainedExecution;
 using System.Xml.Linq;
 
 namespace CountOrNotCount
-{ 
-    internal class Program
+{
+    /// <summary>
+    /// Code was taken from lab materials of course NPRG035, MFF UK 2023.
+    /// And slightky changed.
+    /// </summary>
+    public class ProgramInputOutputState : IDisposable
     {
-        static void Main(string[] args)
+        public const string ArgumentErrorMessage = "Argument Error";
+        public const string FileErrorMessage = "File Error";
 
+        public StreamReader? Reader { get; private set; }
+        public StreamWriter? Writer { get; private set; }
+
+        public bool InitializeFromCommandLineArgs(string[] args)
         {
-            const string ArgumentError = "Argument Error";
-            const string FileError = "File Error";
-            if (args.Length < 3)
+            if (args.Length != 3)
             {
-                Console.WriteLine(ArgumentError);
-                return;
+                Console.Write(ArgumentErrorMessage + "\n");
+                return false;
             }
 
             try
             {
-                string inputFile = args[0];
-                string outFile = args[1];
+                Reader = new StreamReader(args[0]);
+            }
+            catch (IOException)
+            {
+                Console.Write(FileErrorMessage + "\n");
+                return false;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.Write(FileErrorMessage + "\n");
+                return false;
+            }
+            catch (ArgumentException)
+            {
+                Console.Write(FileErrorMessage + "\n");
+                return false;
+            }
+
+            try
+            {
+                Writer = new StreamWriter(args[1]);
+            }
+            catch (IOException)
+            {
+                Console.Write(FileErrorMessage + "\n");
+                return false;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.Write(FileErrorMessage + "\n");
+                return false;
+            }
+            catch (ArgumentException)
+            {
+                Console.Write(FileErrorMessage + "\n");
+                return false;
+            }
+
+            return true;
+        }
+
+        public void Dispose()
+        {
+            Reader?.Dispose();
+            Writer?.Dispose();
+        }
+    }
+
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            const string FileError = "File Error";
+            var state = new ProgramInputOutputState();
+            if (!state.InitializeFromCommandLineArgs(args))
+            {
+                return;
+            }
+            try
+            {
                 string columnName = args[2];
 
-                FileInfo fInfo = new FileInfo(columnName);
-                FileInputOutput fIO = new FileInputOutput(inputFile, outFile, fInfo);
+                WordProcessor fInfo = new WordProcessor(columnName);
+                FileInputOutput fIO = new FileInputOutput(state.Reader!, state.Writer!, fInfo);
 
                 fIO.ParseFile();
                 fIO.WriteReport();
-                fIO.Dispose();
+                state.Dispose();
             }
             catch (IOException)
             {
                 Console.WriteLine(FileError);
+                
             }
             catch (UnauthorizedAccessException)
 
@@ -55,16 +121,21 @@ namespace CountOrNotCount
             {
                 Console.WriteLine(e.Message);
             }
+            state.Dispose();
         }
     }
 
-    public class FileInfo
+    public class WordProcessor
     {
         public const string ColumnError = "Non-existent Column Name";
+        public const string FileFormatError = "Invalid File Format";
+        public const string InvalidIntegerError = "Invalid Integer Value";
+
         int _columnNumber = -1;
+        int _columns = 0;
         public string columnName { get; private set; }
         public long ItemsSum { get; private set; }
-        public FileInfo(string colName)
+        public WordProcessor(string colName)
         {
             columnName = colName;
             ItemsSum = 0;
@@ -86,13 +157,18 @@ namespace CountOrNotCount
             }
             if (_columnNumber == -1)
             {
-                throw new Exception("Non-existent Column Name");
+                throw new Exception(ColumnError);
             }
+            _columns = line.Count();
         }
 
         public void ParseLine(string[] line)
         {
             int num = 0;
+            if (line.Count() != _columns)
+            {
+                throw new Exception(FileFormatError);
+            }
             for (int i = 0; i < line.Length; i++)
             {
                 if (_columnNumber == i)
@@ -104,74 +180,56 @@ namespace CountOrNotCount
                     }
                     catch (Exception)
                     {
-                        throw new Exception("Invalid Integer Value");
+                        throw new Exception(InvalidIntegerError);
                     }
                 }
             }
         }
     }
 
-
-    class FileInputOutput
+    public class FileInputOutput
     {
         StreamReader _fr;
         StreamWriter _fw;
-        FileInfo info;
+        WordProcessor info;
 
-        public FileInputOutput(string inputFile, string outputFile, FileInfo fi)
+        public FileInputOutput(StreamReader input, StreamWriter output, WordProcessor fi)
         {
-            _fr = new StreamReader(inputFile);
-            _fw = new StreamWriter(outputFile);
+            _fr = input;
+            _fw = output;
             info = fi;
         }
 
         public void ParseFile()
-        {
-            int columns = 0;
+        {    
             string file_line = _fr.ReadLine();
             if (file_line == null)
             {
-                Dispose();
-                throw new Exception("Invalid File Format");
+                throw new Exception(WordProcessor.FileFormatError);
             }
-
-           
+  
             char[] whitechars = new char[] { ' ', '\t' };
 
             string[] line = file_line.Split(whitechars, StringSplitOptions.RemoveEmptyEntries);
 
             if (line.Count() == 0)
             {
-                Dispose();
-                throw new Exception("Invalid File Format");
+                throw new Exception(WordProcessor.FileFormatError);
             }
             try
             {
                 info.ParseHeader(line);
 
-                columns = line.Count();
                 while ((file_line = _fr.ReadLine()) != null)
                 {
-
-                    line = file_line.Split(whitechars, StringSplitOptions.RemoveEmptyEntries);
-                    if (line.Count() != columns)
-                    {
-                        throw new Exception("Invalid File Format");
-                    }
+                    line = file_line.Split(whitechars, StringSplitOptions.RemoveEmptyEntries);          
                     info.ParseLine(line);
                 }
             }
             catch (Exception e)
             {
-                Dispose();
                 throw new Exception(e.Message);
             }
-        }
-
-        public void Dispose()
-        {
-            _fr?.Dispose();
-            _fw?.Dispose();
         }
 
         void WriteChar(char ch)
@@ -205,6 +263,52 @@ namespace CountOrNotCount
             else
                 WriteString(info.ItemsSum.ToString());
             WriteChar('\n');
+        }
+    }
+
+    /// <summary>
+    /// Created for test purposes only. To simulate Main() function
+    /// </summary>
+    public static class ProgramManager
+    {
+        public static void RunMainFunction(string[] args)
+        {
+            const string FileError = "File Error";
+            var state = new ProgramInputOutputState();
+            if (!state.InitializeFromCommandLineArgs(args))
+            {
+                return;
+            }
+            try
+            {
+                string columnName = args[2];
+
+                WordProcessor fInfo = new WordProcessor(columnName);
+                FileInputOutput fIO = new FileInputOutput(state.Reader!, state.Writer!, fInfo);
+
+                fIO.ParseFile();
+                fIO.WriteReport();
+                state.Dispose();
+            }
+            catch (IOException)
+            {
+                Console.Write(FileError + '\n');
+
+            }
+            catch (UnauthorizedAccessException)
+
+            {
+                Console.Write(FileError + '\n');
+            }
+            catch (ArgumentException)
+            {
+                Console.Write(FileError + '\n');
+            }
+            catch (Exception e)
+            {
+                Console.Write(e.Message + '\n');
+            }
+            state.Dispose();
         }
     }
 }

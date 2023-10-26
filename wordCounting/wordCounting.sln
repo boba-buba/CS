@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CountOrNotCount", "..\Count
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParargaphWordCounter_UnitTests", "..\ParargaphWordCounter_UnitTests\ParargaphWordCounter_UnitTests.csproj", "{71C84092-6276-4932-9FDD-03956C613EE1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CountOrNotCount_UnitTests", "..\CountOrNotCount_UnitTests\CountOrNotCount_UnitTests.csproj", "{428B4687-6149-4F53-A548-7B7FB56744E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CountOrNotCount_UnitTests", "..\CountOrNotCount_UnitTests\CountOrNotCount_UnitTests.csproj", "{428B4687-6149-4F53-A548-7B7FB56744E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

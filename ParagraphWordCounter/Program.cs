@@ -10,6 +10,10 @@ using System.Reflection.Metadata;
 
 namespace ParagraphWordCounter
 {
+    /// <summary>
+    /// Code was taken from lab materials of course NPRG035, MFF UK 2023.
+    /// And slightky changed.
+    /// </summary>
     public class ProgramInputOutputState : IDisposable
     {
         public const string ArgumentErrorMessage = "Argument Error";
@@ -54,33 +58,6 @@ namespace ParagraphWordCounter
         }
     }
 
-    public class ConsoleOutput : IDisposable
-    {
-        /// <summary>
-        /// This code was taken from http://www.vtrifonov.com/2012/11/getting-console-output-within-unit-test.html
-        /// </summary>
-        private StringWriter stringWriter;
-        private TextWriter originalOutput;
-
-        public ConsoleOutput()
-        {
-            stringWriter = new StringWriter();
-            originalOutput = Console.Out;
-            Console.SetOut(stringWriter);
-        }
-
-        public string GetOuput()
-        {
-            return stringWriter.ToString();
-        }
-
-        public void Dispose()
-        {
-            Console.SetOut(originalOutput);
-            stringWriter.Dispose();
-        }
-    }
-    
     public class WordProcessor
     {
         public WordProcessor() { }
@@ -161,13 +138,10 @@ namespace ParagraphWordCounter
             }
             if (word.Length > 0) { info.IncrementCount(); info.AddLineWordsCount(); }
 
-            info.AddLineWordsCount();      
+            info.AddLineWordsCount();  
+            info.AddLineWordsCount();
         }
 
-        /*public void Dispose()
-        {
-            _reader.Dispose();
-        }*/
         
     }
 

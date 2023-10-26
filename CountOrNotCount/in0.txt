@@ -1,3 +1,0 @@
-mesic	zbozi		cen			prodejce	mnozstvi	cena	trzba
-leden	brambory	tuzemske	Bartak		10895		12	    130740
-leden	brambory	vlastni		Celestyn		10		-19090			  89
