@@ -10,6 +10,77 @@ using System.Reflection.Metadata;
 
 namespace ParagraphWordCounter
 {
+    public class ProgramInputOutputState : IDisposable
+    {
+        public const string ArgumentErrorMessage = "Argument Error";
+        public const string FileErrorMessage = "File Error";
+
+        public StreamReader? Reader { get; private set; }
+
+        public bool InitializeFromCommandLineArgs(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                Console.Write(ArgumentErrorMessage + "\n");
+                return false;
+            }
+
+            try
+            {
+                Reader = new StreamReader(args[0]);
+            }
+            catch (IOException)
+            {
+                Console.Write(FileErrorMessage + "\n");
+                return false;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.Write(FileErrorMessage + "\n");
+                return false;
+            }
+            catch (ArgumentException)
+            {
+                Console.Write(FileErrorMessage + "\n");
+                return false;
+            }
+
+            return true;
+        }
+
+        public void Dispose()
+        {
+            Reader?.Dispose();
+        }
+    }
+
+    public class ConsoleOutput : IDisposable
+    {
+        /// <summary>
+        /// This code was taken from http://www.vtrifonov.com/2012/11/getting-console-output-within-unit-test.html
+        /// </summary>
+        private StringWriter stringWriter;
+        private TextWriter originalOutput;
+
+        public ConsoleOutput()
+        {
+            stringWriter = new StringWriter();
+            originalOutput = Console.Out;
+            Console.SetOut(stringWriter);
+        }
+
+        public string GetOuput()
+        {
+            return stringWriter.ToString();
+        }
+
+        public void Dispose()
+        {
+            Console.SetOut(originalOutput);
+            stringWriter.Dispose();
+        }
+    }
+    
     public class WordProcessor
     {
         public WordProcessor() { }
@@ -42,16 +113,21 @@ namespace ParagraphWordCounter
         }
 
         public string GetWordCounts() { return WordCounts; }
+
+        public void PrintReport()
+        {
+            Console.Write(WordCounts);
+        }
     }
 
     public class FileParser
     {        
         WordProcessor info;
-        StreamReader reader;
-        public FileParser(WordProcessor fi, string fileName) 
+        StreamReader _reader;
+        public FileParser(WordProcessor fi, StreamReader reader) 
         { 
             info = fi;
-            reader = new StreamReader(fileName);
+            _reader = reader;
 
         }
         
@@ -62,7 +138,7 @@ namespace ParagraphWordCounter
             char[] whiteChars = { ' ', '\t', '\n' };
             int charInt = 0;
 
-            charInt = reader.Read();
+            charInt = _reader.Read();
 
             while (charInt != -1)
             {
@@ -81,44 +157,36 @@ namespace ParagraphWordCounter
                 {
                     info.AddLineWordsCount();
                 }
-                charInt = reader.Read();
+                charInt = _reader.Read();
             }
             if (word.Length > 0) { info.IncrementCount(); info.AddLineWordsCount(); }
 
             info.AddLineWordsCount();      
         }
 
-        public void Dispose()
+        /*public void Dispose()
         {
-            reader.Dispose();
-        }
+            _reader.Dispose();
+        }*/
         
     }
-
 
     public class Program
     {
         static void Main(string[] args)
         {
-            if (args.Length != 1)
+            var state = new ProgramInputOutputState();
+            if (!state.InitializeFromCommandLineArgs(args))
             {
-                Console.WriteLine("Argument Error");
                 return;
             }
 
-            try
-            {
-                string f = args[0];
-                WordProcessor fi = new WordProcessor();
-                FileParser fp = new FileParser(fi, f);
-                fp.ParseFile();
-                Console.Write(fi.GetWordCounts());
-                fp.Dispose();
-            }
-            catch (IOException)
-            {
-                Console.WriteLine("File Error");
-            }
+            WordProcessor fi = new WordProcessor();
+            FileParser fp = new FileParser(fi, state.Reader!);
+            fp.ParseFile();
+            fi.PrintReport();
+            state.Dispose();
+
         }
     }
 }

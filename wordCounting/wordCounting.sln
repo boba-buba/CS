@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParagraphWordCounter", "..\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CountOrNotCount", "..\CountOrNotCount\CountOrNotCount.csproj", "{912E7C5A-01AF-4815-9B6E-DDAD242FEC38}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParargaphWordCounter_UnitTests", "..\ParargaphWordCounter_UnitTests\ParargaphWordCounter_UnitTests.csproj", "{71C84092-6276-4932-9FDD-03956C613EE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParargaphWordCounter_UnitTests", "..\ParargaphWordCounter_UnitTests\ParargaphWordCounter_UnitTests.csproj", "{71C84092-6276-4932-9FDD-03956C613EE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CountOrNotCount_UnitTests", "..\CountOrNotCount_UnitTests\CountOrNotCount_UnitTests.csproj", "{428B4687-6149-4F53-A548-7B7FB56744E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{71C84092-6276-4932-9FDD-03956C613EE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71C84092-6276-4932-9FDD-03956C613EE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71C84092-6276-4932-9FDD-03956C613EE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{428B4687-6149-4F53-A548-7B7FB56744E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{428B4687-6149-4F53-A548-7B7FB56744E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{428B4687-6149-4F53-A548-7B7FB56744E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{428B4687-6149-4F53-A548-7B7FB56744E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

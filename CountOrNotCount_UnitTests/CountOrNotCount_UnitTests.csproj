@@ -23,25 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ParagraphWordCounter\ParagraphWordCounter.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="EmptyWhiteLines.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="EmptyWhiteLinesAfterBeforeText.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Hamlet.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="MoreThanOneEmptyLineBetweenParagraphs.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="TabSeparated.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\CountOrNotCount\CountOrNotCount.csproj" />
   </ItemGroup>
 
 </Project>
