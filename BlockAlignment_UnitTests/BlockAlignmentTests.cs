@@ -22,5 +22,21 @@ namespace BlockAlignment_UnitTests
             }
 
         }
+
+        [Fact] 
+        public void ArgumentErrorThirdParameter()
+        {
+            // Arrange
+            string[] MockCommandLine = new string[] { "PrettyTextFromTaskIn.txt", "PrettyTextFromTaskOut.txt", "yy" };
+            var currentConsoleOut = Console.Out;
+            // Act  
+            using (var consoleOutput = new ConsoleOutputManager())
+            {
+                ProgramManager.RunMainFunction(MockCommandLine);
+
+                // Assert
+                Assert.Equal("Argument Error\n", consoleOutput.GetOuput());
+            }
+        }
     }
 }

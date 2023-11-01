@@ -26,4 +26,13 @@
     <ProjectReference Include="..\BlockAlignment\BlockAlignment.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="PrettyTesxtFromTaskOut.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PrettyTesxtFromTaskIn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
