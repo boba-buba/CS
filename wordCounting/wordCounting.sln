@@ -15,6 +15,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParargaphWordCounter_UnitTe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CountOrNotCount_UnitTests", "..\CountOrNotCount_UnitTests\CountOrNotCount_UnitTests.csproj", "{428B4687-6149-4F53-A548-7B7FB56744E4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockAlignment", "..\BlockAlignment\BlockAlignment.csproj", "{E8C4EF3F-0800-487F-A1AD-CD7E9B9E306D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockAlignment_UnitTests", "..\BlockAlignment_UnitTests\BlockAlignment_UnitTests.csproj", "{79A47A28-1ADA-41BE-AB1C-05DA8F89307C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,14 @@ Global
 		{428B4687-6149-4F53-A548-7B7FB56744E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{428B4687-6149-4F53-A548-7B7FB56744E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{428B4687-6149-4F53-A548-7B7FB56744E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8C4EF3F-0800-487F-A1AD-CD7E9B9E306D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8C4EF3F-0800-487F-A1AD-CD7E9B9E306D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8C4EF3F-0800-487F-A1AD-CD7E9B9E306D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8C4EF3F-0800-487F-A1AD-CD7E9B9E306D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79A47A28-1ADA-41BE-AB1C-05DA8F89307C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79A47A28-1ADA-41BE-AB1C-05DA8F89307C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79A47A28-1ADA-41BE-AB1C-05DA8F89307C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79A47A28-1ADA-41BE-AB1C-05DA8F89307C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
