@@ -8,7 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="PrettyTextFromTaskIn.txt">
+    <None Update="EmptyLinesAfterLastWordIn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="BigTextIn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="SeveralParagraphsIn.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TooLongWordForLineIn.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

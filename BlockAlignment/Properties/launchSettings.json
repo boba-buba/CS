@@ -2,7 +2,7 @@
   "profiles": {
     "BlockAlignment": {
       "commandName": "Project",
-      "commandLineArgs": "PrettyTextFromTaskIn.txt Out.txt 17"
+      "commandLineArgs": "PrettyTextFromTaskIn.txt Out.txt 45"
     }
   }
 }

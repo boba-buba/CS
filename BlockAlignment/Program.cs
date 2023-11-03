@@ -129,65 +129,80 @@ namespace BlockAlignment
 
         ResultOutput resultOutput;
         public int maxWidth { get; private set; }
-        private List<string> words = new List<string>();
+        private List<string> LineToPrint = new List<string>();
         private int charsInLine = 0;
-        bool firstLine = true;
+        bool newParagrah = false;
 
         int LineWordCount = 0;
-        //int paragraphCount = 0;
         int paragraphWords = 0;
-        //string WordCounts = "";
         public void IncrementCount()
         {
             LineWordCount++;
         }
 
-        void PrintLastLineOfPar()
+        void PrintLastParagrLine()
         {
-            for (int i = 0;i < words.Count() - 1;i++)
+            if (newParagrah)
             {
-                resultOutput.WriteString(words[i] + " ");
+                resultOutput.WriteChar('\n');
+                newParagrah = false;
             }
-            resultOutput.WriteString(words[words.Count() - 1]);
+
+            for (int i = 0;i < LineToPrint.Count() - 1;i++)
+            {
+                resultOutput.WriteString(LineToPrint[i] + " ");
+            }
+            resultOutput.WriteString(LineToPrint[LineToPrint.Count() - 1]);
+            CleanLine();
         }
         
-        public void AddLineWordsCount(char ch)
+        public void ParseEOL()
         {
             if (LineWordCount == 0 && paragraphWords != 0) // empty line => end of the previous pragarph
             {
-                if (ch == '\n')
-                {
-                    PrintLastLineOfPar();
-                    resultOutput.WriteChar('\n');
-                }
-                else
-                {
-                    PrintAlignedLine();
-                }
+                PrintLastParagrLine();                
                 paragraphWords = 0;
+                newParagrah = true;
             }
-            else
+            else // the end of line in the middle of the paragraph, end of non empty line
             {
                 paragraphWords += LineWordCount;
                 LineWordCount = 0;
             }
         }
 
+        public void ParseEOF()
+        {
+            if (LineToPrint.Count > 0)
+            {
+                PrintLastParagrLine();
+            }
+            resultOutput.WriteChar('\n');
+        }
+
+        void CleanLine()
+        {
+            LineToPrint.Clear();
+            charsInLine = 0;
+        }
+
         public void ParseWord(string word)
         {
-            int wordsInLine = words.Count();
+            IncrementCount();
+            int wordsInLine = LineToPrint.Count();
             int wordLength = word.Length;
-            int sum = wordLength + charsInLine + wordsInLine; //number of chars in word + number of chars in words already + min number of spaces
+            int sum = wordLength + charsInLine + wordsInLine; // number of chars in word + number of chars in Line + min number of spaces
 
             if (sum <= maxWidth)
             {
-                words.Add(word);
+                LineToPrint.Add(word);
                 charsInLine += wordLength;
             } 
             else
             {
                 PrintAlignedLine();
-                words.Add(word);
+                CleanLine();
+                LineToPrint.Add(word);
                 charsInLine += wordLength;
             }
         }
@@ -202,45 +217,45 @@ namespace BlockAlignment
 
         void PrintAlignedLine()
         {
-            if (firstLine) firstLine = false;
-            else resultOutput.WriteChar('\n');
+            if (newParagrah)
+            {
+                resultOutput.WriteString("\n\n");
+                newParagrah = false;
+            }
 
             int numberOfSpaces = maxWidth - charsInLine;
             if (numberOfSpaces <= 0)  // Length of word is equal or greater than maxWidth
             {
-                resultOutput.WriteString(words[0] + "\n");
+                resultOutput.WriteString(LineToPrint[0] + "\n");
             }
             else
             {
                 // Places that need whitespaces are words.Count() - 1
-                int placesForSpaces = words.Count() - 1;
+                int placesForSpaces = LineToPrint.Count() - 1;
                 if (placesForSpaces == 0)
                 {
-                    resultOutput.WriteString(words[0]);
+                    resultOutput.WriteString(LineToPrint[0] + '\n');
                 }
                 else
                 {
                     int spacesForAll = numberOfSpaces / placesForSpaces;
-                    int spacesForAllExceptLasts = numberOfSpaces % placesForSpaces;
-                    for (int i = 0; i < words.Count - 1; i++)
+                    int LeftSpaces = numberOfSpaces % placesForSpaces;
+                    for (int i = 0; i < LineToPrint.Count - 1; i++)
                     {
-                        resultOutput.WriteString(words[i]);
+                        resultOutput.WriteString(LineToPrint[i]);
                         int spacesToPrint = spacesForAll;
-                        if (spacesForAllExceptLasts > 0)
+                        if (LeftSpaces > 0)
                         {
                             spacesToPrint += 1;
-                            spacesForAllExceptLasts--;
+                            LeftSpaces--;
                         }
 
                         PrintSpaces(spacesToPrint);
                     }
-                    resultOutput.WriteString(words[words.Count - 1]);
+                    resultOutput.WriteString(LineToPrint[LineToPrint.Count - 1] + '\n');
 
                 }
-                //resultOutput.WriteChar('\n');
             }
-            words.Clear();
-            charsInLine = 0;
         }
 
     }
@@ -275,25 +290,20 @@ namespace BlockAlignment
                 }
                 else if ((whiteChars.Contains(ch)) && (word.Length > 0))
                 {
-                    info.IncrementCount();
                     info.ParseWord(word);
                     word = "";
                 }
                 if ((ch == '\n'))
                 {
-                    info.AddLineWordsCount(ch);
+                    info.ParseEOL();
                 }
                 charInt = reader.Read();
             }
             if (word.Length > 0) 
             {
-                info.IncrementCount();
-                info.ParseWord(word);
-                info.AddLineWordsCount(' '); 
+                info.ParseWord(word);   
             }
-
-            info.AddLineWordsCount(' ');
-            //info.AddLineWordsCount();
+            info.ParseEOF();
         }
 
 

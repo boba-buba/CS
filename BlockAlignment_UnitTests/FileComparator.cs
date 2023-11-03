@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Text;
 
 namespace FileComparatorHandler
@@ -66,4 +66,4 @@ namespace FileComparatorHandler
             return ((file1byte - file2byte) == 0);
         }
     }
-}
+}*/

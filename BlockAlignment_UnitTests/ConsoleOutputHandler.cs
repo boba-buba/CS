@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 
 namespace ConsoleOutputHandler
 {
@@ -31,4 +31,4 @@ namespace ConsoleOutputHandler
             stringWriter.Dispose();
         }
     }
-}
+}*/
