@@ -20,8 +20,7 @@ namespace SeveralFilesBlockAlignment
         public const string FileErrorMessage = "File Error";
         const string higlightSpacesOption = "--highlight-spaces";
 
-        //public StreamReader? Reader { get; private set; }
-        public StreamWriter? Writer { get; private set; }
+        public TextWriter? Writer { get; private set; }
 
         public int maxWidth { get; private set; }
         public bool higlightSpaces { get; private set; } = false;
@@ -94,11 +93,11 @@ namespace SeveralFilesBlockAlignment
 
     public class ResultOutput
     {
-        public ResultOutput(StreamWriter writer)
+        public ResultOutput(TextWriter writer)
         {
             this.writer = writer;
         }
-        private StreamWriter writer;
+        public TextWriter writer { get; private set; }
 
         public void WriteChar(char ch)
         {
@@ -126,7 +125,7 @@ namespace SeveralFilesBlockAlignment
             if (higlightSpaces) 
             { 
                 spaceSymbol = '.'; 
-                nextLineSymbol = "<-";
+                nextLineSymbol = "<-\n";
             }
         }
 
@@ -147,13 +146,13 @@ namespace SeveralFilesBlockAlignment
         {
             if (newParagrah)
             {
-                resultOutput.WriteChar('\n');
+                resultOutput.WriteString(nextLineSymbol);
                 newParagrah = false;
             }
 
             for (int i = 0; i < LineToPrint.Count() - 1; i++)
             {
-                resultOutput.WriteString(LineToPrint[i] + " ");
+                resultOutput.WriteString(LineToPrint[i] + spaceSymbol);
             }
             resultOutput.WriteString(LineToPrint[LineToPrint.Count() - 1]);
             CleanLine();
@@ -180,7 +179,7 @@ namespace SeveralFilesBlockAlignment
             {
                 PrintLastParagrLine();
             }
-            resultOutput.WriteChar('\n');
+            resultOutput.WriteString(nextLineSymbol);
         }
 
         void CleanLine()
@@ -214,7 +213,7 @@ namespace SeveralFilesBlockAlignment
         {
             for (int i = 0; i < number; i++)
             {
-                resultOutput.WriteChar(' ');
+                resultOutput.WriteChar(spaceSymbol);
             }
         }
 
@@ -222,14 +221,14 @@ namespace SeveralFilesBlockAlignment
         {
             if (newParagrah)
             {
-                resultOutput.WriteString("\n\n");
+                resultOutput.WriteString(nextLineSymbol+nextLineSymbol);
                 newParagrah = false;
             }
 
             int numberOfSpaces = maxWidth - charsInLine;
             if (numberOfSpaces <= 0)  // Length of word is equal or greater than maxWidth
             {
-                resultOutput.WriteString(LineToPrint[0] + "\n");
+                resultOutput.WriteString(LineToPrint[0] + nextLineSymbol);
             }
             else
             {
@@ -237,7 +236,7 @@ namespace SeveralFilesBlockAlignment
                 int placesForSpaces = LineToPrint.Count() - 1;
                 if (placesForSpaces == 0)
                 {
-                    resultOutput.WriteString(LineToPrint[0] + '\n');
+                    resultOutput.WriteString(LineToPrint[0] + nextLineSymbol);
                 }
                 else
                 {
@@ -255,7 +254,7 @@ namespace SeveralFilesBlockAlignment
 
                         PrintSpaces(spacesToPrint);
                     }
-                    resultOutput.WriteString(LineToPrint[LineToPrint.Count - 1] + '\n');
+                    resultOutput.WriteString(LineToPrint[LineToPrint.Count - 1] + nextLineSymbol);
 
                 }
             }
@@ -266,18 +265,20 @@ namespace SeveralFilesBlockAlignment
     public class FileParser
     {
         WordProcessor info;
-        public FileParser(WordProcessor fi)
+        int fileCounter;
+        public FileParser(WordProcessor fi, int fileCounter)
         {
             info = fi;
-
+            this.fileCounter = fileCounter;
         }
 
-        public void ParseFile(StreamReader reader)
+        public void ParseFile(TextReader reader)
         {
             char ch;
             string word = "";
             char[] whiteChars = { ' ', '\t', '\n' };
             int charInt = 0;
+            fileCounter--;
 
             charInt = reader.Read();
 
@@ -304,10 +305,11 @@ namespace SeveralFilesBlockAlignment
             {
                 info.ParseWord(word);
             }
-            //info.ParseEOF();
+            if (fileCounter == 0)
+            {
+                info.ParseEOF();
+            }   
         }
-
-
     }
 
     public class Program
@@ -322,7 +324,8 @@ namespace SeveralFilesBlockAlignment
 
             ResultOutput resultOutput = new ResultOutput(state.Writer!);
             WordProcessor wordProcessor = new WordProcessor(state.maxWidth, resultOutput, state.higlightSpaces);
-            FileParser fp = new FileParser(wordProcessor);
+            int fileCounter = state.lastFileIndex - state.firstFileIndex;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
 
             for (int i = state.firstFileIndex; i < state.lastFileIndex; i++)
             {
@@ -331,11 +334,11 @@ namespace SeveralFilesBlockAlignment
                     StreamReader fileToParse = new StreamReader(args[i]);
                     fp.ParseFile(fileToParse);
                 }
-                catch (Exception e) 
+                catch (Exception) 
                 {
-                    continue;
+                    StringReader empty = new StringReader("");
+                    fp.ParseFile(empty);
                 }
-                
             }
             state.Dispose();
 
@@ -343,3 +346,491 @@ namespace SeveralFilesBlockAlignment
     }
 
 }
+
+/* Tests 
+ namespace SeveralFilesBlockAlignment_UnitTests
+{
+    public class SeveralFilesBlockAlignment_Tests
+    {
+        [Fact]
+        public void HiglightSpacesOption_LessThanFourParameters()
+        {
+            // Arrange
+            string[] args = { "--highlight-spaces", "ex01.out", "17" };
+            var state = new ProgramInputOutputState();
+
+            using (var consoleOutput = new ConsoleOutputManager())
+            {
+                // Act
+                Assert.False(state.InitializeFromCommandLineArgs(args));
+                
+                // Assert
+                Assert.Equal("Argument Error\n", consoleOutput.GetOuput());
+            }
+        }
+
+        [Fact]
+        public void ThreeFiles_OneParagraphEach()
+        {
+            // Arrange
+            string[] args = { 
+                "If a train station is where the train stops, what is a work station?",
+                "If a train station is where the train stops, what is a work station?",
+                "If a train station is where the train stops, what is a work station?"};
+            string expectedOutput = """
+                If     a    train
+                station  is where
+                the  train stops,
+                what  is  a  work
+                station?   If   a
+                train  station is
+                where  the  train
+                stops,  what is a
+                work  station? If
+                a  train  station
+                is    where   the
+                train stops, what
+                is     a     work
+                station?
+                
+                """;
+            
+            StringWriter outputWriter = new StringWriter();
+
+            ResultOutput resultOutput = new ResultOutput(outputWriter);
+            int maxWidth = 17;
+            bool higlightSpaces = false;
+            WordProcessor wordProcessor = new WordProcessor(maxWidth, resultOutput, higlightSpaces);
+            int fileCounter = args.Length;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
+
+            // Act
+            for (int i = 0; i < fileCounter; i++)
+            {
+                try
+                {
+                    StringReader fileToParse = new StringReader(args[i]);
+                    fp.ParseFile(fileToParse);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+
+            // Assert
+            Assert.Equal(expectedOutput, resultOutput.writer.ToString());
+
+        }
+
+
+        [Fact]
+        public void ThreeFiles_SecondFileIsEmpty()
+        {
+            // Arrange
+            string[] args = {
+                "If a train station is where the train stops, what is a work station?",
+                "",
+                "If a train station is where the train stops, what is a work station?"};
+            string expectedOutput = """
+                If     a    train
+                station  is where
+                the  train stops,
+                what  is  a  work
+                station?   If   a
+                train  station is
+                where  the  train
+                stops,  what is a
+                work station?
+                
+                """;
+
+            StringWriter outputWriter = new StringWriter();
+
+            ResultOutput resultOutput = new ResultOutput(outputWriter);
+            int maxWidth = 17;
+            bool higlightSpaces = false;
+            WordProcessor wordProcessor = new WordProcessor(maxWidth, resultOutput, higlightSpaces);
+            int fileCounter = args.Length;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
+
+            // Act
+            for (int i = 0; i < fileCounter; i++)
+            {
+                try
+                {
+                    StringReader fileToParse = new StringReader(args[i]);
+                    fp.ParseFile(fileToParse);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+
+            // Assert
+            Assert.Equal(expectedOutput, resultOutput.writer.ToString());
+
+        }
+
+        [Fact]
+        public void TwoFiles_FirstEndsWithEOL_SecondStartsWithEOL()
+        {
+            // Arrange
+            string[] args = {
+                "If a train station is where the train stops, what is a work station?\n",
+                "\nIf a train station is where the train stops, what is a work station?"};
+            string expectedOutput = """
+                If     a    train
+                station  is where
+                the  train stops,
+                what  is  a  work
+                station?
+
+                If     a    train
+                station  is where
+                the  train stops,
+                what  is  a  work
+                station?
+                
+                """;
+
+            StringWriter outputWriter = new StringWriter();
+
+            ResultOutput resultOutput = new ResultOutput(outputWriter);
+            int maxWidth = 17;
+            bool higlightSpaces = false;
+            WordProcessor wordProcessor = new WordProcessor(maxWidth, resultOutput, higlightSpaces);
+            int fileCounter = args.Length;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
+
+            // Act
+            for (int i = 0; i < fileCounter; i++)
+            {
+                try
+                {
+                    StringReader fileToParse = new StringReader(args[i]);
+                    fp.ParseFile(fileToParse);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+
+            // Assert
+            Assert.Equal(expectedOutput, resultOutput.writer.ToString());
+
+        }
+
+        [Fact]
+        public void ThreeEmptyFiles()
+        {
+            // Arrange
+            string[] args = {"", "", ""};
+            string expectedOutput = """
+                
+
+                """;
+
+            StringWriter outputWriter = new StringWriter();
+
+            ResultOutput resultOutput = new ResultOutput(outputWriter);
+            int maxWidth = 17;
+            bool higlightSpaces = false;
+            WordProcessor wordProcessor = new WordProcessor(maxWidth, resultOutput, higlightSpaces);
+            int fileCounter = args.Length;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
+
+            // Act
+            for (int i = 0; i < fileCounter; i++)
+            {
+                try
+                {
+                    StringReader fileToParse = new StringReader(args[i]);
+                    fp.ParseFile(fileToParse);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+
+            // Assert
+            Assert.Equal(expectedOutput, resultOutput.writer.ToString());
+
+        }
+
+        [Fact]
+        public void TwoFiles_EachHasTwoParagraphs_ResultMustHaveTreeParagraphs()
+        {
+            // Arrange
+            string[] args = {
+                "If a train station is where the\n\ntrain stops, what is a work station?",
+                "If a train station is where the\n\ntrain stops, what is a work station?"};
+            string expectedOutput = """
+                If     a    train
+                station  is where
+                the
+
+                train stops, what
+                is     a     work
+                station?   If   a
+                train  station is
+                where the
+
+                train stops, what
+                is     a     work
+                station?
+                
+                """;
+
+            StringWriter outputWriter = new StringWriter();
+
+            ResultOutput resultOutput = new ResultOutput(outputWriter);
+            int maxWidth = 17;
+            bool higlightSpaces = false;
+            WordProcessor wordProcessor = new WordProcessor(maxWidth, resultOutput, higlightSpaces);
+            int fileCounter = args.Length;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
+
+            // Act
+            for (int i = 0; i < fileCounter; i++)
+            {
+                try
+                {
+                    StringReader fileToParse = new StringReader(args[i]);
+                    fp.ParseFile(fileToParse);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+
+            // Assert
+            Assert.Equal(expectedOutput, resultOutput.writer.ToString());
+
+        }
+
+        [Fact]
+        public void HighlightSpaces_OneFile_OneParagraph()
+        {
+            // Arrange
+            string[] args = {"If a train station is where the train stops, what is a work station?"};
+            string expectedOutput = """
+                If.....a....train<-
+                station..is.where<-
+                the..train.stops,<-
+                what..is..a..work<-
+                station?<-
+                
+                """;
+
+            StringWriter outputWriter = new StringWriter();
+
+            ResultOutput resultOutput = new ResultOutput(outputWriter);
+            int maxWidth = 17;
+            bool higlightSpaces = true;
+            WordProcessor wordProcessor = new WordProcessor(maxWidth, resultOutput, higlightSpaces);
+            int fileCounter = args.Length;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
+
+            // Act
+            for (int i = 0; i < fileCounter; i++)
+            {
+                try
+                {
+                    StringReader fileToParse = new StringReader(args[i]);
+                    fp.ParseFile(fileToParse);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+
+            // Assert
+            Assert.Equal(expectedOutput, resultOutput.writer.ToString());
+
+        }
+
+        [Fact]
+        public void HighlightSpaces_ThreeFiles_EachOneParagraph_ResultMustHaveOneParagraph()
+        {
+            // Arrange
+            string[] args = { 
+                "If a train station is where the train stops, what is a work station?",
+                "If a train station is where the train stops, what is a work station?",
+                "If a train station is where the train stops, what is a work station?"
+            };
+
+            string expectedOutput = """
+                If.....a....train<-
+                station..is.where<-
+                the..train.stops,<-
+                what..is..a..work<-
+                station?...If...a<-
+                train..station.is<-
+                where..the..train<-
+                stops,..what.is.a<-
+                work..station?.If<-
+                a..train..station<-
+                is....where...the<-
+                train.stops,.what<-
+                is.....a.....work<-
+                station?<-
+                
+                """;
+
+            StringWriter outputWriter = new StringWriter();
+
+            ResultOutput resultOutput = new ResultOutput(outputWriter);
+            int maxWidth = 17;
+            bool higlightSpaces = true;
+            WordProcessor wordProcessor = new WordProcessor(maxWidth, resultOutput, higlightSpaces);
+            int fileCounter = args.Length;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
+
+            // Act
+            for (int i = 0; i < fileCounter; i++)
+            {
+                try
+                {
+                    StringReader fileToParse = new StringReader(args[i]);
+                    fp.ParseFile(fileToParse);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+
+            // Assert
+            Assert.Equal(expectedOutput, resultOutput.writer.ToString());
+
+        }
+
+        [Fact]
+        public void HighlightSpaces_ThreeEmptyFiles()
+        {
+            // Arrange
+            string[] args = { "", "", "" };
+
+            string expectedOutput = """
+                <-
+
+                """;
+
+            StringWriter outputWriter = new StringWriter();
+
+            ResultOutput resultOutput = new ResultOutput(outputWriter);
+            int maxWidth = 17;
+            bool higlightSpaces = true;
+            WordProcessor wordProcessor = new WordProcessor(maxWidth, resultOutput, higlightSpaces);
+            int fileCounter = args.Length;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
+
+            // Act
+            for (int i = 0; i < fileCounter; i++)
+            {
+                try
+                {
+                    StringReader fileToParse = new StringReader(args[i]);
+                    fp.ParseFile(fileToParse);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+
+            // Assert
+            Assert.Equal(expectedOutput, resultOutput.writer.ToString());
+
+        }
+
+        [Fact]
+        public void HighlightSpaces_OneFile_TwoParagraphs()
+        {
+            // Arrange
+            string[] args = { "If a train station is where the\n\ntrain stops, what is a work station?" };
+
+            string expectedOutput = """
+                If.....a....train<-
+                station..is.where<-
+                the<-
+                <-
+                train.stops,.what<-
+                is.....a.....work<-
+                station?<-
+                
+                """;
+
+            StringWriter outputWriter = new StringWriter();
+
+            ResultOutput resultOutput = new ResultOutput(outputWriter);
+            int maxWidth = 17;
+            bool higlightSpaces = true;
+            WordProcessor wordProcessor = new WordProcessor(maxWidth, resultOutput, higlightSpaces);
+            int fileCounter = args.Length;
+            FileParser fp = new FileParser(wordProcessor, fileCounter);
+
+            // Act
+            for (int i = 0; i < fileCounter; i++)
+            {
+                try
+                {
+                    StringReader fileToParse = new StringReader(args[i]);
+                    fp.ParseFile(fileToParse);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+
+            // Assert
+            Assert.Equal(expectedOutput, resultOutput.writer.ToString());
+
+        }
+
+    }
+}
+
+
+Helping class for tests:
+
+namespace ConsoleOutputHandler
+{
+    /// <summary>
+    /// Created for test purposes. To get Console output into tests.
+    /// </summary>
+    public class ConsoleOutputManager : IDisposable
+    {
+        /// <summary>
+        /// This code was taken from http://www.vtrifonov.com/2012/11/getting-console-output-within-unit-test.html
+        /// </summary>
+        private StringWriter stringWriter;
+        private TextWriter originalOutput;
+
+        public ConsoleOutputManager()
+        {
+            stringWriter = new StringWriter();
+            originalOutput = Console.Out;
+            Console.SetOut(stringWriter);
+        }
+
+        public string GetOuput()
+        {
+            return stringWriter.ToString();
+        }
+
+        public void Dispose()
+        {
+            Console.SetOut(originalOutput);
+            stringWriter.Dispose();
+        }
+    }
+}
+ */
