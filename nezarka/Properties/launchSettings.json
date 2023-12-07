@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "nezarka": {
+      "commandName": "Project",
+      "commandLineArgs": "NezarkaTest.in"
+    }
+  }
+}
