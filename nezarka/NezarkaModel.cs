@@ -100,6 +100,50 @@ namespace NezarkaBookstore
 
             return store;
         }
+
+        public void AddNewItemInCart(int bookId, Customer customer)
+        {
+            
+            if (customer == null) throw new Exception();
+            Book book = GetBook(bookId);
+            if (book == null) throw new Exception();
+            int index = customer.ShoppingCart.GetItemInCart(bookId);
+            
+
+            if ( index == -1 )
+            {
+                ShoppingCartItem newItem = new ShoppingCartItem();
+
+                customer.ShoppingCart.Items.Add(new ShoppingCartItem
+                {
+                    BookId = bookId,
+                    Count = 1
+                });
+                
+            }
+            else
+            {
+                customer.ShoppingCart.Items[index].Count++;
+            }
+        }
+
+        public void RemoveItemFromCart(int bookId, Customer customer)
+        {
+            if (customer == null) throw new Exception();           
+            int index = customer.ShoppingCart.GetItemInCart(bookId);
+            if (index == -1) throw new Exception();
+
+            int count = customer.ShoppingCart.Items[index].Count;
+            if (count == 1)
+            {
+                customer.ShoppingCart.Items.RemoveAt(index);
+            }
+            else
+            {
+                customer.ShoppingCart.Items[index].Count--;
+            }
+
+        }
     }
 
     class Book
@@ -145,5 +189,17 @@ namespace NezarkaBookstore
     {
         public int CustomerId { get; set; }
         public List<ShoppingCartItem> Items = new List<ShoppingCartItem>();
+
+        public int GetItemInCart(int bookId)
+        {
+            for (int i = 0; i < Items.Count; i++) 
+            {
+                if (Items[i].BookId == bookId)
+                    return i;
+            }
+            return -1;
+        }
+
+
     }
 }

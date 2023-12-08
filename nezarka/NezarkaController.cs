@@ -18,17 +18,14 @@ namespace NezarkaBookstore
     {
         TextReader Requests;
         ModelStore modelStore;
-        Viewer viewerStore = new Viewer();
+        Viewer viewerStore;
         public Controller(TextReader Requests, ModelStore modelStore) 
         {
             this.modelStore = modelStore;
             this.Requests = Requests;
+            this.viewerStore = new Viewer(modelStore);
         }
 
-        public Book getBookFromModel(int id)
-        {
-            return modelStore.GetBook(id);
-        }
         public void ParseRequests()
         {
             string? request = Requests.ReadLine();
@@ -67,6 +64,18 @@ namespace NezarkaBookstore
 
             }
         }
+
+        void AddRemoveItemToCustomerCart(string BookId, Customer customer, bool add)
+        {
+            int bookId;
+            try
+            {
+                bookId = int.Parse(BookId);
+            } catch (Exception) { throw new Exception(); }
+            if (add) modelStore.AddNewItemInCart(bookId, customer);
+            else modelStore.RemoveItemFromCart(bookId, customer);
+        }
+
         void ParseShoppingCartRequest(Customer customer, string[] link) 
         {
             string name = customer.FirstName;
@@ -79,16 +88,20 @@ namespace NezarkaBookstore
             {
                 case 3:
                     viewerStore.ShowShoppingCartPage(name, cartItemsCount, shoppingCart);
-
                     break;
                 case 5:
                     if (link[3] == "Add")
                     {
 
+                        AddRemoveItemToCustomerCart(link[4], customer, true);
+                        shoppingCart = customer.ShoppingCart;
+                        viewerStore.ShowShoppingCartPage(name, customer.ShoppingCart.Items.Count, shoppingCart);
                     }
                     else if (link[3] == "Remove")
                     {
-
+                        AddRemoveItemToCustomerCart(link[4], customer, false);
+                        shoppingCart = customer.ShoppingCart;
+                        viewerStore.ShowShoppingCartPage(name, customer.ShoppingCart.Items.Count, shoppingCart);
                     }
                     else throw new Exception();
                     break;

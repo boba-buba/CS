@@ -9,6 +9,12 @@ namespace NezarkaBookstore
 { 
     class Viewer
     {
+        ModelStore modelStore;
+        public Viewer(ModelStore modelStore) 
+        {
+            this.modelStore = modelStore;
+        }
+
         string separator = "====";
         string head = 
             """
@@ -46,8 +52,8 @@ namespace NezarkaBookstore
                 <!DOCTYPE html>
                 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
                 <head>
-                	<meta charset="utf-8" />
-                	<title>Nezarka.net: Online Shopping for Books</title>
+                    <meta charset="utf-8" />
+                    <title>Nezarka.net: Online Shopping for Books</title>
                 </head>
                 <body>
                 <p>Invalid request.</p>
@@ -131,7 +137,7 @@ namespace NezarkaBookstore
             {
                 Console.WriteLine(String.Format("            <td>{0} EUR</td>", book.Price));
             }
-            Console.WriteLine(String.Format("            <td>&lt;<a href=\"/ShoppingCart/Remove/{0}\">Remove</a>&gt;</td>", item.BookId);
+            Console.WriteLine(String.Format("            <td>&lt;<a href=\"/ShoppingCart/Remove/{0}\">Remove</a>&gt;</td>", item.BookId));
             Console.WriteLine("        </tr>");
             return sumPrice;
         }
@@ -146,6 +152,11 @@ namespace NezarkaBookstore
             Console.WriteLine("            <th>Actions</th>");
             Console.WriteLine("        </tr>");
             
+            for (int i = 0; i < shoppingCart.Items.Count; i++) 
+            {
+                Book book = modelStore.GetBook(shoppingCart.Items[i].BookId);
+                overallPrice += CartItemCell(shoppingCart.Items[i], book);
+            }
 
             Console.WriteLine("    </table>");
             Console.WriteLine(String.Format("    Total price of all items: {0} EUR", overallPrice));

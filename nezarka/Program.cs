@@ -13,7 +13,7 @@ namespace NezarkaBookstore
     {
         static void Main(string[] args)
         {
-            StreamReader reader = new StreamReader(args[0]);
+            StreamReader reader = new StreamReader(Console.OpenStandardInput());
 
             ModelStore modelStore = ModelStore.LoadFrom(reader);
             
