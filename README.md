@@ -8,3 +8,4 @@
 5. Block Alignment for Several Files  and Unit Tests <br>
 6. Nezarka
 7. Huffman 1
+8. Huffman 2
