@@ -38,6 +38,9 @@
     <None Update="log1.in">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="ConsoleCraft1.in">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="test4.in">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

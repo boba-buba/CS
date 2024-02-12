@@ -5,12 +5,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Collections;
+using System.Numerics;
+using System.Net.Mail;
+using System.Timers;
+using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 namespace zapocetPolyCalc
 {
     class ErrorException : Exception
     {
-        public const string ErrorMessage = "Error Message";
+        public const string ErrorMessage = "Syntax Error";
     }
     public class ProgramInputOutputState : IDisposable
     {
@@ -53,273 +58,271 @@ namespace zapocetPolyCalc
             Reader?.Dispose();
         }
     }
-    
-    class PolynomMember
-    { 
-        public int koef = 0;
-        public int power = 0;
-        public PolynomMember(int koef, int power)
-        {
-            this.koef = koef;
-            this.power = power;
-        }   
-    }
 
 
-    class Calculator
+
+    class PolyCalculator 
     {
-        private Dictionary<int, int> _intermediateResult = new Dictionary<int, int> { };
+        private List<int> _currentPolynom = new List<int> { 0 }; 
+        public PolyCalculator() { }
 
-        private bool IsVariable(string member)
+        private void PrintPolynom()
         {
-            bool xVar = false;
-            bool power = false;
-            for (int i = 0; i < member.Length; i++)
+            bool isZero = true;
+            for (int i = 0; i < _currentPolynom.Count; i++) 
             {
-                if (!char.IsDigit(member[i]))
+                int koef = _currentPolynom[i];
+                int power = i;
+                if (koef != 0)
                 {
-                    if (member[i] != 'x' && member[i] != '^')
+                    isZero = false;
+                    if (koef == -1 && power == 0) Console.Write("-1");
+                    else if (koef == -1 && power != 0) Console.Write('-');
+                    else if (koef == 1 && power == 0) Console.Write(koef);
+                    else if (koef != 1) Console.Write(koef);
+
+                    if (power != 0)
                     {
-                        return false;
+                        if (power == 1) Console.Write('x');
+                        else Console.Write("x^" + power.ToString());
                     }
-                    if (member[i] == 'x') xVar = true;
-                    if (member[i] == '^') power = true;
+                    Console.Write(' ');
                 }
-                
             }
-            if (power && !xVar) { return false; }
-            return true;
+            if (isZero) { Console.Write(0); }
+            Console.WriteLine();
         }
-        private bool CheckIfValidPolynom(string[] tokens)
+        private (int, int) ParseMember(string member)
         {
-            foreach (string token in tokens) 
+            int koef = 1;
+            int power = 0;
+            bool hasX = member.Contains('x');
+            bool hasPower = member.Contains('^');
+            if (hasX)
             {
-                if (!(IsVariable(token))) 
-                    return false;
+                power = 1;
+                var pair = member.Split('x', StringSplitOptions.RemoveEmptyEntries);
+                if (pair.Length == 0) { koef = 1; power = 1; }
+                else if (pair.Length == 1 && !hasPower) //5x
+                {
+                    if (pair[0] == "-") koef = -1;
+                    else { if (!int.TryParse(pair[0], out koef)) { throw new ErrorException(); } }
+                }
+                else if (pair.Length == 1 && hasPower) //x^2
+                {
+                    if (!int.TryParse(pair[0].Substring(1), out power)) { throw new ErrorException(); }
+                }
+                else //5x^2
+                {
+                    if (pair[0] == "-") 
+                        koef = -1;
+                    else { if (!int.TryParse(pair[0], out koef)) { throw new ErrorException(); } }
+                    if (!int.TryParse(pair[1].Substring(1), out power)) { throw new ErrorException(); }
+                }
             }
-            return true;
+            else //5
+            {
+                if (!int.TryParse(member, out koef)) { throw new ErrorException(); }
+            }
+
+
+            
+            return (power, koef);
+        }
+        private void TryParsePolynom(string[] tokens, List<int> pol)
+        {
+            foreach (var token in tokens)
+            {
+                var pair = ParseMember(token);
+                if (pol.Count < pair.Item1 + 1)
+                {
+                    int delta = pair.Item1 + 1 - pol.Count;
+                    for (int i = 0; i < delta; i++)
+                    {
+                        pol.Add(0);
+                    }
+                }
+                pol[pair.Item1] = pair.Item2;
+            }
         }
 
-        private Dictionary<int, int> ConvertToPolynom(string[] tokens)
+        private void ReadPolynomToMem(string[] tokens)
         {
-            var nonDigists = new char[] { 'x', '^' };
-            var polynom = new Dictionary<int, int>{ };
-            foreach (string token in tokens)
+            var temp = new List<int> { 0 };
+            TryParsePolynom(tokens, temp);
+            _currentPolynom = temp;
+            
+        }
+        private void SumPolynoms(List<int> first, List<int> second, char symbol)
+        {
+            for (int i = 0; i < first.Count; i++)
             {
-                var koef = "0";
-                var power = "0";
-                int minus = 1;
-                var i = 0;
-                if (token[i] == '-') { minus = -1; i++; }
-                var c = token[i];
-                while(c != 'x')
-                {
-                    koef += c;
-                    i++; if (i == token.Length) break;
-                    c = token[i];
-                }
-                if (c == 'x') 
-                {
-                    
-                    if (i == 0) koef = "1";
-                }
-                i += 2;
-                while (i < token.Length) 
-                {
-                    c = token[i];
-                    power += c;
-                    i++;
-                }
-                if (token[token.Length - 1] == 'x') 
-                    power = "1";
-                var PowerNumber =  int.Parse(power);
-                polynom[PowerNumber] = minus * int.Parse(koef);
+                if (i == second.Count) second.Add(0);
+                if (symbol == '-') second[i] -= first[i];
+                else second[i] += first[i];
             }
-            return polynom;
         }
-        private void SetPolynom(string[] tokens)
+        private void AddPolynom(string[] tokens)
         {
-            if (!CheckIfValidPolynom(tokens)) 
-            { throw new ErrorException(); }
+            var polToAdd = new List<int>();
+            
+            TryParsePolynom(tokens.Skip(1).ToArray(), polToAdd);
 
-            _intermediateResult = ConvertToPolynom(tokens);
-        }
-
-        private bool ChangePolynomMember(Dictionary<int, int> polynom, int power, int koef, char op)
-        {
-            if (polynom.ContainsKey(power))
+            if (polToAdd.Count < _currentPolynom.Count)
             {
-                if (op == '+') polynom[power] += koef;
-                else polynom[power] -= koef;
-                return true;
+                SumPolynoms(polToAdd, _currentPolynom, '+');
             }
-            return false;
-        }
-
-        private Dictionary<int, int> PlusMinus(Dictionary<int, int> first, Dictionary<int, int> second, char op)
-        {
-            foreach (var member in first)
+            else
             {
-                if (!(ChangePolynomMember(first, member.Key, member.Value, op)))
-                {
-                    if (op == '-') second[member.Key] = -member.Value;
-                    else second[member.Key] = member.Value;
-                }
+                SumPolynoms(_currentPolynom, polToAdd, '+');
+                _currentPolynom = polToAdd;
             }
-            return second;
         }
-        private void PlusMinusPolynom(string[] tokens, char op)
+        private void SubtractPolynom(string[] tokens)
         {
-            var polynomToAdd = ConvertToPolynom(tokens.Skip(1).ToArray());
-            PlusMinus(polynomToAdd, _intermediateResult, op);
+            var polToAdd = new List<int>();
+            TryParsePolynom(tokens.Skip(1).ToArray(), polToAdd);
+            SumPolynoms(polToAdd, _currentPolynom, '-');
+        }
+        private void AddZeros(List<int> pol, int count)
+        {
+            for (int i = 0; i < count; i++)  
+                pol.Add(0);
         }
         
-        private Dictionary<int, int> Multiply(Dictionary<int, int> first, Dictionary<int, int> second)
+        private List<int> MultiplyPolynoms(List<int> first, List<int> second)
         {
-            var newPolynom = new Dictionary<int, int> { };
+            List<int> temp = new List<int>();
+            AddZeros(temp, first.Count + second.Count - 1);
 
-            foreach (var m1 in first)
+            for (int i = 0; i < first.Count; i++)
             {
-                int power = m1.Key;
-                int koef = m1.Value;
-                foreach (var m2 in second)
+                for (int j = 0; j < second.Count; j++)
                 {
-                    int newKoef = koef * m2.Value;
-                    int newPower = power + m2.Key;
-                    if (newPolynom.ContainsKey(newPower))
-                        newPolynom[newPower] += newKoef;
-                    else
-                    {
-                        newPolynom[newPower] = newKoef;
-                    }
+                    int power = i + j;
+                    int koef = first[i] * second[j];
+                    temp[power] += koef;
                 }
             }
-            return newPolynom;
+            return temp;
         }
         private void MultiplyPolynom(string[] tokens)
         {
-            var polynomToMult = ConvertToPolynom(tokens.Skip(1).ToArray());
-            var newPolynom = Multiply(polynomToMult, _intermediateResult);
-            _intermediateResult = newPolynom;   
-        }
+            var polToMult = new List<int>();
+            TryParsePolynom(tokens.Skip(1).ToArray(), polToMult);
 
+            var newPol = new List<int>() {};
+            AddZeros(newPol, _currentPolynom.Count + polToMult.Count - 1);
+
+            for (int i = 0; i < polToMult.Count; i++)
+            {
+                for(int j = 0; j < _currentPolynom.Count; j++)
+                {
+                    int power = i + j;                    
+                    int koef = _currentPolynom[j] * polToMult[i];
+                    newPol[power] += koef;
+                }
+            }
+            _currentPolynom = newPol;
+        }
         private void EvaluatePolynom(string[] tokens)
         {
-            int number;
-            if (tokens.Length != 2 || !(int.TryParse(tokens[1], out number))) throw new ErrorException();
-
-            int result = 0;
-            foreach (var member in _intermediateResult)
+            double result = 0;
+            int value;
+            if (tokens.Length != 2) { throw new ErrorException(); }
+            if (!int.TryParse(tokens[1], out value)) throw new ErrorException();
+            for (int i = 0; i < _currentPolynom.Count; i++)
             {
-                if (member.Key == 0) result += member.Value;
-                else
-                {
-                    result += member.Value * (int)Math.Pow(number, member.Key);
-                }
+                result += Math.Pow(value, i) * _currentPolynom[i];
             }
             Console.WriteLine(result);
         }
-
-        private void DerivatePolynom(string[] tokens)
+        private void DerivatePolynom()
         {
-            var newPolynom = new Dictionary<int, int> { };
-            foreach (var member in _intermediateResult)
+            _currentPolynom[0] = 0;
+            for (int i = 1; i < _currentPolynom.Count; ++i)
             {
-
-                if (member.Key != 0)
-                {
-                    var newKoef = member.Key * member.Value;
-                    var newPower = member.Key - 1;
-                    newPolynom[newPower] = newKoef;
-
-                }
+                _currentPolynom[i - 1] = i * _currentPolynom[i];
             }
-            _intermediateResult = newPolynom;
+            _currentPolynom[_currentPolynom.Count - 1] = 0;
         }
 
+        private List<int> PolynomPower(List<int> polynom, int power)
+        {
+            List<int> result = new List<int> {0};
+            AddZeros(result, polynom.Count-1 * power);
+
+            if (power >= 1) { SumPolynoms(polynom, result, '+'); }
+
+            for(int i = 1; i < power; ++i)
+            {
+                var temp = MultiplyPolynoms(result, polynom);
+                result = temp;
+            }
+            return result;
+        }
         private void SubstitutePolynom(string[] tokens)
         {
-            var polynom = ConvertToPolynom(tokens.Skip(1).ToArray());
-            var result = new Dictionary<int, int>();
-            foreach (var member in _intermediateResult)
-            {
-                var interResult = polynom;
-                for (int i = 0; i < member.Key - 1; i++)
-                {
-                    var multResult = Multiply(polynom, interResult);
-                    interResult = multResult;
-                }
-                if (member.Key != 0)
-                {
-                    var koefResult = Multiply(interResult, new Dictionary<int, int> { { 0, member.Value } });
-                    interResult = koefResult;
-                }
-                
-                var r = PlusMinus(interResult, result, '+');
-                result = r;
-            }
-            _intermediateResult = result;
-        }
+            var polToInsert = new List<int>();
+            TryParsePolynom(tokens.Skip(1).ToArray(), polToInsert);
 
-        private void PrintCurrent()
-        {
-            foreach( var pair in _intermediateResult.OrderBy(key => key.Key))
+            List<int> result = new List<int>();
+            AddZeros(result, (_currentPolynom.Count - 1) * (polToInsert.Count - 1) + 1);
+            for (int i = 1; i < _currentPolynom.Count; i++)
             {
-                if (pair.Key == 0)
-                { if (pair.Value != 0) Console.Write(pair.Value.ToString()); }
-                else if (pair.Key == 1)
-                {
-                    if (pair.Value != 1) Console.Write(pair.Value.ToString());
-                    Console.Write('x');
-                }
-                else
-                {
-                    if (pair.Value != 1) Console.Write(pair.Value.ToString());
-                    Console.Write("x^" + pair.Key);
-                }
-                Console.Write(' ');
+                int power = i;
+                int koef = _currentPolynom[i];
+                var temp = PolynomPower(polToInsert, power);
+                var tempKoef = MultiplyPolynoms(temp, new List<int> { koef});
+                SumPolynoms(tempKoef, result, '+');
             }
-            Console.WriteLine();
+            result[0] += _currentPolynom[0];
+            _currentPolynom = result;
         }
-        
-        public void ProcessRequest(string[] tokens)
+        public void ParseRequest(string[] tokens)
         {
-            if (tokens.Length < 1) 
-            { throw new ErrorException(); }
+            if (!tokens.Any()) { throw new ErrorException(); }
             switch (tokens[0])
             {
                 case "+":
-                    PlusMinusPolynom(tokens, '+'); 
+                    AddPolynom(tokens);
+                    PrintPolynom();
                     break;
                 case "-":
-                    PlusMinusPolynom(tokens, '-'); 
+                    SubtractPolynom(tokens);
+                    PrintPolynom();
                     break;
                 case "*":
-                    MultiplyPolynom(tokens); break;
+                    MultiplyPolynom(tokens);
+                    PrintPolynom();
+                    break;
                 case "e":
-                    EvaluatePolynom(tokens); break;
+                    EvaluatePolynom(tokens);
+                    break;
                 case "d":
-                    DerivatePolynom(tokens); break;
+                    DerivatePolynom();
+                    PrintPolynom();
+                    break;
                 case "s":
-                    SubstitutePolynom(tokens); break;
+                    SubstitutePolynom(tokens);
+                    PrintPolynom();
+                    break;
                 default:
-                    SetPolynom(tokens);
+                    ReadPolynomToMem(tokens);
+                    PrintPolynom();
                     break;
             }
-            PrintCurrent();
         }
     }
 
-    
 
     class Parser
     {
         private StreamReader _reader;
-        private Calculator _calculator;
+        private PolyCalculator _calc = new PolyCalculator();
         public Parser(StreamReader reader)
         {
             _reader = reader;
-            _calculator = new Calculator();
         }
         private string[] GetTokens(string line)
         {
@@ -336,7 +339,7 @@ namespace zapocetPolyCalc
             {
                 try
                 {
-                    _calculator.ProcessRequest(GetTokens(line));
+                    _calc.ParseRequest(GetTokens(line));
                 }
                 catch (ErrorException)
                 {
@@ -349,7 +352,7 @@ namespace zapocetPolyCalc
     }
     internal class Program2
     {
-        static void Main2(string[] args)
+        static void Main(string[] args)
         {
 
             ProgramInputOutputState state = new ProgramInputOutputState();
@@ -357,9 +360,9 @@ namespace zapocetPolyCalc
             {
                 return;
             }
-
             Parser parser = new Parser(state.Reader);
             parser.ReadLines();
+
             
 
         }
